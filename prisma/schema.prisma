@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("STUDENT") // ADMIN | COACH | STUDENT
+  status    String   @default("ACTIVE")  // ACTIVE | PENDING | REJECTED
+  createdAt DateTime @default(now())
+
+  // As a coach: students assigned to this coach
+  coachStudents CoachStudent[] @relation("CoachRelation")
+  // As a student: coaches assigned to this student
+  studentCoaches CoachStudent[] @relation("StudentRelation")
+
+  // Task relations
+  assignedTasks Task[] @relation("CoachTaskRelation")
+  receivedTasks Task[] @relation("StudentTaskRelation")
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  coachId     String
+  studentId   String
+  lessonName  String    // Ders Adı (Matematik, Fizik vb.)
+  sourceName  String    // Kaynak Adı (345, Bilgisarmal vb.)
+  description String    // Hedef/Açıklama (50 Soru Çözümü vb.)
+  deadline    DateTime  // Son Teslim Tarihi
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  coach   User @relation("CoachTaskRelation",   fields: [coachId],   references: [id], onDelete: Cascade)
+  student User @relation("StudentTaskRelation", fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model CoachStudent {
+  id        String @id @default(cuid())
+  coachId   String
+  studentId String
+  createdAt DateTime @default(now())
+
+  coach   User @relation("CoachRelation", fields: [coachId], references: [id], onDelete: Cascade)
+  student User @relation("StudentRelation", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([coachId, studentId])
+}
