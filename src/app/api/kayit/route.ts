@@ -10,7 +10,7 @@ const kayitSchema = z.object({
     .string()
     .min(6, "Şifre en az 6 karakter olmalıdır."),
   role: z.enum(["COACH", "STUDENT"], {
-    errorMap: () => ({ message: "Geçerli bir rol seçiniz." }),
+    message: "Geçerli bir rol seçiniz.",
   }),
 });
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.errors[0].message },
+        { error: parsed.error.issues[0].message },
         { status: 400 }
       );
     }
